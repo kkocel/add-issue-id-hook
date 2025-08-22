@@ -4,15 +4,12 @@
 #
 # Created by Piotr Betkier
 # https://github.com/pbetkier/add-issue-id-hook
-
-# customize the final commit message using placeholders:
-#  - {issue_id} replaced with discovered issue id
-#  - {user_message} replaced with message provided by the user
-commit_message_format = '{issue_id} {user_message}'
+# Modified by Krzysztof Kocel
+# https://github.com/kkocel/add-issue-id-hook
 
 # you may set this to your custom JIRA project key format
 # or explicitly specify a single project name, e.g. 'EXAMPLE'
-project_format = '[A-Z][A-Z]+'  
+project_format = '[A-Z][A-Z]+'
 
 # if not using JIRA, set this to your ticket system's issue pattern
 issue_pattern = r'{}-[\d]+'.format(project_format)
@@ -50,5 +47,17 @@ if issue_id_match:
     found_issue_id = issue_id_match.group()
     user_message = remove_editor_help_message(read_current_message())
 
+    lines = user_message.splitlines()
+    first_line = lines[0] if lines else ""
+    rest_of_message = "\n".join(lines[1:]) if len(lines) > 1 else ""
+
     if contains_message(user_message) and found_issue_id not in user_message:
-        write_message(commit_message_format.format(issue_id=found_issue_id, user_message=user_message))
+        if ':' in first_line:
+            colon_index = first_line.index(':')
+            type_part = first_line[:colon_index + 1]
+            first_line_rest = first_line[colon_index + 1:].lstrip()
+
+            write_message(f"{type_part} {found_issue_id} {first_line_rest}\n{rest_of_message}")
+        else:
+            if first_line:
+                write_message(f"{found_issue_id} {first_line}\n{rest_of_message}")

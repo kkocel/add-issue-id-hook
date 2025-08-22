@@ -11,6 +11,28 @@ class AddIssueIdHookTest(unittest.TestCase):
         self.execute('git init tmp_repo', 'cp commit-msg tmp_repo/.git/hooks/.')
         os.chdir('tmp_repo')
 
+    def test_prepends_issue_id_from_branch_name_to_commit_message_after_type(self):
+        # given
+        self.on_branch("some_EXAMPLE-1337_feature")
+        self.with_changes_to_be_committed()
+
+        # when
+        self.commit_with_message("feat: Added some file.")
+
+        # then
+        self.assert_last_commit_message_is("feat: EXAMPLE-1337 Added some file.\n")
+
+    def test_prepends_issue_id_from_branch_name_to_commit_message_after_type_with_no_space(self):
+        # given
+        self.on_branch("some_EXAMPLE-1337_feature")
+        self.with_changes_to_be_committed()
+
+        # when
+        self.commit_with_message("feat:Added some file.")
+
+        # then
+        self.assert_last_commit_message_is("feat: EXAMPLE-1337 Added some file.\n")
+
     def test_prepends_issue_id_from_branch_name_to_commit_message(self):
         # given
         self.on_branch("some_EXAMPLE-1337_feature")
@@ -20,18 +42,29 @@ class AddIssueIdHookTest(unittest.TestCase):
         self.commit_with_message("Added some file.")
 
         # then
-        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file.")
+        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file.\n")
 
-    def test_prepends_first_matching_issue_id_to_commit_message_if_multiple_ids_in_branch_name_exist(self):
+    def test_prepends_issue_id_from_branch_name_to_multiline_commit_message(self):
         # given
-        self.on_branch("some_EXAMPLE-1337_feature_EXAMPLE-99")
+        self.on_branch("some_EXAMPLE-1337_feature")
         self.with_changes_to_be_committed()
 
         # when
-        self.commit_with_message("Added some file.")
+        self.commit_with_message("Added some file.\nDesc \n")
 
         # then
-        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file.")
+        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file.\nDesc\n")
+
+    def test_prepends_first_matching_issue_id_to_commit_message_if_multiple_ids_in_branch_name_exist(self):
+        # given
+        self.on_branch("some_EXAMPLE-2137_feature_EXAMPLE-1337")
+        self.with_changes_to_be_committed()
+
+        # when
+        self.commit_with_message("feat: Added some file.")
+
+        # then
+        self.assert_last_commit_message_is("feat: EXAMPLE-2137 Added some file.\n")
         
     def test_prepends_issue_id_to_commit_message_when_message_contains_a_different_issue_id(self):
         # given
@@ -42,7 +75,18 @@ class AddIssueIdHookTest(unittest.TestCase):
         self.commit_with_message("Added some file fixing problems in EXAMPLE-99.")
 
         # then
-        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file fixing problems in EXAMPLE-99.")
+        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file fixing problems in EXAMPLE-99.\n")
+
+    def test_doesnt_modify_commit_message_if_issue_id_is_in_anywhere_in_commit_message(self):
+        # given
+        self.on_branch("EXAMPLE-1337_some_feature")
+        self.with_changes_to_be_committed()
+
+        # when
+        self.commit_with_message("Added some file fixing problems\n\nFor Issue EXAMPLE-1337.")
+
+        # then
+        self.assert_last_commit_message_is("Added some file fixing problems\n\nFor Issue EXAMPLE-1337.\n")
 
     def test_doesnt_modify_commit_message_if_issue_id_not_in_branch_name(self):
         # given
@@ -53,7 +97,7 @@ class AddIssueIdHookTest(unittest.TestCase):
         self.commit_with_message("Added some file.")
 
         # then
-        self.assert_last_commit_message_is("Added some file.")
+        self.assert_last_commit_message_is("Added some file.\n")
 
     def test_doesnt_modify_commit_message_if_it_already_contains_this_issue_id(self):
         # given
@@ -64,7 +108,7 @@ class AddIssueIdHookTest(unittest.TestCase):
         self.commit_with_message("EXAMPLE-1337 Added some file.")
 
         # then
-        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file.")
+        self.assert_last_commit_message_is("EXAMPLE-1337 Added some file.\n")
 
     def test_doesnt_modify_commit_message_if_in_detached_HEAD_state(self):
         # given
@@ -76,7 +120,7 @@ class AddIssueIdHookTest(unittest.TestCase):
         self.commit_with_message("Added some file.")
 
         # then
-        self.assert_last_commit_message_is("Added some file.")
+        self.assert_last_commit_message_is("Added some file.\n")
 
     def test_supports_aborting_a_commit_by_providing_an_empty_message(self):
         # given
@@ -129,7 +173,7 @@ class AddIssueIdHookTest(unittest.TestCase):
             print(e)
 
     def assert_last_commit_message_is(self, expected):
-        self.assertEqual(self.execute('git log -1 --pretty=format:"%s"'), expected)
+        self.assertEqual(expected, self.execute('git log -1 --pretty=format:"%B"'))
 
     def assert_no_commits_made(self):
         self.assertEqual(self.execute('git branch'), '')

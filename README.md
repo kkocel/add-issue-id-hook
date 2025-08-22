@@ -37,7 +37,7 @@ This plugin requires having Python 3.x installed (comes pre-installed on OS X an
 
 ```bash
 cd my-repo
-curl https://raw.githubusercontent.com/pbetkier/add-issue-id-hook/master/commit-msg -o ./.git/hooks/commit-msg && chmod +x ./.git/hooks/commit-msg
+curl https://raw.githubusercontent.com/kkocel/add-issue-id-hook/master/commit-msg -o ./.git/hooks/commit-msg && chmod +x ./.git/hooks/commit-msg
 ```
 
 ### Global installation
@@ -50,10 +50,6 @@ It's possible to apply this hook to every newly cloned or initialized repository
 ### Customizations
 
 Customizations are supported by opening your copy of ``commit-msg`` file and adjusting the configuration variables.
-
-#### Commit message format
-
-Provide your commit message formatting by changing ``commit_message_format`` variable.
 
 #### JIRA project key pattern
 

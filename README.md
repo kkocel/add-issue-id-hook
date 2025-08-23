@@ -2,6 +2,8 @@
 
 Git commit hook for adding related JIRA issue ids to commit messages.
 
+It supports [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) by adding issue id after the type.
+
 ## How does it work?
 Issue id is parsed from the current branch name and prepended to your commit message.
 
@@ -18,12 +20,16 @@ Here's the specification generated from ``spec.py`` tests:
 #### AddIssueIdHook:
  - prepends issue id from branch name to commit message
  - prepends first matching issue id to commit message if multiple ids in branch name exist
+ - prepends issue id from branch name to commit message after type
+ - prepends issue id from branch name to commit message after type with no space
+ - prepends issue id from branch name to multiline commit message
  - prepends issue id to commit message when message contains a different issue id
+ - doesnt modify commit message if in detached HEAD state
+ - doesnt modify commit message if issue id is in anywhere in commit message
  - doesnt modify commit message if issue id not in branch name
  - doesnt modify commit message if it already contains this issue id
- - doesnt modify commit message if in detached HEAD state
- - supports aborting a commit by providing an empty message
  - supports aborting a commit by exiting from editor without making changes
+ - supports aborting a commit by providing an empty message
 
 ## Installation
 
